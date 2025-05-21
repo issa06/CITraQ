@@ -1,0 +1,160 @@
+[
+  {
+    "subject": "英語理解基礎1",
+    "credits": "1",
+    "evaluation": "B",
+    "course_category": "教養科目",
+    "classification": "コミュニケーションスキル"
+  },
+  {
+    "subject": "英語表現基礎1",
+    "credits": "1",
+    "evaluation": "A",
+    "course_category": "教養科目",
+    "classification": "コミュニケーションスキル"
+  },
+  {
+    "subject": "英語理解基礎2",
+    "credits": "1",
+    "evaluation": "B",
+    "course_category": "教養科目",
+    "classification": "コミュニケーションスキル"
+  },
+  {
+    "subject": "英語表現基礎2",
+    "credits": "1",
+    "evaluation": "C",
+    "course_category": "教養科目",
+    "classification": "コミュニケーションスキル"
+  },
+  {
+    "subject": "情報処理",
+    "credits": "2",
+    "evaluation": "A",
+    "course_category": "教養科目",
+    "classification": "情報"
+  },
+  {
+    "subject": "スポーツ科学",
+    "credits": "2",
+    "evaluation": "B",
+    "course_category": "教養科目",
+    "classification": "人間力養成"
+  },
+  {
+    "subject": "初年次教育",
+    "credits": "1",
+    "evaluation": "認定",
+    "course_category": "教養科目",
+    "classification": "人間力養成"
+  },
+  {
+    "subject": "キャリアデザイン1",
+    "credits": "1",
+    "evaluation": "認定",
+    "course_category": "教養科目",
+    "classification": "人間力養成"
+  },
+  {
+    "subject": "倫理学",
+    "credits": "2",
+    "evaluation": "A",
+    "course_category": "教養科目",
+    "classification": "人間・社会・自然の理解",
+    "学部指定科目群": 1
+  },
+  {
+    "subject": "心理学",
+    "credits": "2",
+    "evaluation": "S",
+    "course_category": "教養科目",
+    "classification": "人間・社会・自然の理解",
+    "学部指定科目群": 1
+  },
+  {
+    "subject": "政治と社会",
+    "credits": "2",
+    "evaluation": "B",
+    "course_category": "教養科目",
+    "classification": "人間・社会・自然の理解",
+    "学部指定科目群": 2
+  },
+  {
+    "subject": "経済学",
+    "credits": "2",
+    "evaluation": "C",
+    "course_category": "教養科目",
+    "classification": "人間・社会・自然の理解",
+    "学部指定科目群": 2
+  },
+  {
+    "subject": "数学基礎",
+    "credits": "2",
+    "evaluation": "B",
+    "course_category": "専門科目",
+    "classification": "基礎科目"
+  },
+  {
+    "subject": "微分積分",
+    "credits": "2",
+    "evaluation": "C",
+    "course_category": "専門科目",
+    "classification": "基礎科目"
+  },
+  {
+    "subject": "線形代数基礎",
+    "credits": "2",
+    "evaluation": "B",
+    "course_category": "専門科目",
+    "classification": "基礎科目"
+  },
+  {
+    "subject": "線形代数応用",
+    "credits": "2",
+    "evaluation": "C",
+    "course_category": "専門科目",
+    "classification": "基礎科目"
+  },
+  {
+    "subject": "物理学基礎",
+    "credits": "2",
+    "evaluation": "A",
+    "course_category": "専門科目",
+    "classification": "基礎科目"
+  },
+  {
+    "subject": "物理学応用",
+    "credits": "2",
+    "evaluation": "B",
+    "course_category": "専門科目",
+    "classification": "基礎科目"
+  },
+  {
+    "subject": "論理学基礎",
+    "credits": "2",
+    "evaluation": "A",
+    "course_category": "専門科目",
+    "classification": "基幹科目"
+  },
+  {
+    "subject": "情報工学概論",
+    "credits": "2",
+    "evaluation": "S",
+    "course_category": "専門科目",
+    "classification": "基幹科目"
+  },
+  {
+    "subject": "技術文書作成",
+    "credits": "2",
+    "evaluation": "B",
+    "course_category": "専門科目",
+    "classification": "基幹科目"
+  },
+  {
+    "subject": "論理回路",
+    "credits": "2",
+    "evaluation": "C",
+    "course_category": "専門科目",
+    "classification": "基幹科目"
+  }
+] 

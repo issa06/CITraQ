@@ -1,12 +1,24 @@
+import argparse
+import getpass
 import json
 import os
 import time
 import unicodedata
 from typing import Any, Dict, List, Tuple
 
+try:
+    from cit_portal_wrapper.get_grade import get_grades_json
+    GRADE_FETCH_AVAILABLE = True
+except ImportError:
+    GRADE_FETCH_AVAILABLE = False
+    print("注意: 成績取得機能を使用するには cit-portal-wrapper をインストールしてください")
+    print("pip install -r requirements.txt")
+    print("または、以下のコマンドでインストールしてください")
+    print("pip install git+https://github.com/issa06/cit-portal-wrapper.git")
+
 # Application information
 APP_NAME = "CITraQ"
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 # Grades considered as "Pass"
 PASS_GRADES = ["S", "A", "B", "C", "認定", "合"]
@@ -171,7 +183,7 @@ def load_grades(
             if not matched:
                 print(
                     f"\n[警告] '{subject['subject']}' は、どのカテゴリにも一致しませんでした。"
-                    f"({credit} 単位, 評価: {subject['evaluation']})\n"
+                    f"({credit} 単位, grade: {subject['evaluation']})\n"
                 )
 
     # Add up 基礎・基幹・展開 credits to専門科目
@@ -563,18 +575,148 @@ def status_text(is_achieved: bool) -> str:
         return f"{Color.RED}[未達成]{Color.RESET}"
 
 
+def use_existing_file(user_id: str = None) -> str:
+    """既存の成績ファイルを探して選択する"""
+    # 既存のファイルを探す
+    existing_files = [f for f in os.listdir('.') if f.endswith('_grades.json')]
+
+    # ユーザーIDが指定されている場合は、そのユーザーのファイルを優先
+    if user_id:
+        user_files = [f for f in existing_files if f.startswith(f"{user_id}")]
+        if user_files:
+            existing_files = user_files
+
+    if existing_files:
+        if len(existing_files) == 1:
+            grades_file = existing_files[0]
+            print(f"{Color.GREEN}ファイル {grades_file} を使用して続行します{Color.RESET}")
+            return grades_file
+        else:
+            print(f"{Color.YELLOW}以下のファイルが見つかりました:{Color.RESET}")
+            for i, file in enumerate(existing_files):
+                print(f"{i+1}. {file}")
+            choice = input(
+                f"{Color.YELLOW}使用するファイルの番号を入力してください: {Color.RESET}")
+            try:
+                grades_file = existing_files[int(choice)-1]
+                print(f"{Color.GREEN}ファイル {grades_file} を使用して続行します{Color.RESET}")
+                return grades_file
+            except (ValueError, IndexError):
+                print(f"{Color.RED}無効な選択です。処理を終了します{Color.RESET}")
+                sys.exit(1)
+    else:
+        print(f"{Color.RED}成績ファイルが見つかりません。処理を終了します{Color.RESET}")
+        sys.exit(1)
+    return None
+
+
+def check_file_exists(file_path: str, is_grades_file: bool = True) -> str:
+    """ファイルの存在確認と代替ファイルの選択"""
+    if os.path.exists(file_path):
+        return file_path
+
+    # ファイルが存在しない場合
+    file_type = "成績ファイル" if is_grades_file else "ファイル"
+    print(f"{Color.RED}エラー: 指定された{file_type} {file_path} が見つかりません。{Color.RESET}")
+
+    # 成績ファイルの場合のみ代替ファイルを提案
+    if is_grades_file:
+        try_existing = input(
+            f"{Color.YELLOW}代わりに既存のファイルを使用しますか？(y/n): {Color.RESET}")
+        if try_existing.lower() == 'y':
+            return use_existing_file()
+
+    print(f"{Color.RED}処理を終了します{Color.RESET}")
+    sys.exit(1)
+
+
+def fetch_grades_from_portal(user_id: str, password: str) -> str:
+    """ポータルサイトから成績情報を取得しJSONファイルに保存"""
+    if not GRADE_FETCH_AVAILABLE:
+        print(
+            f"{Color.RED}エラー: 成績取得機能が利用できません。cit-portal-wrapper をインストールしてください。{Color.RESET}")
+        print("pip install git+https://github.com/issa06/cit-portal-wrapper.git")
+        return None
+
+    try:
+        # ユーザーIDからファイル名用の数字部分を抽出（先頭のアルファベットを除去）
+        file_id = user_id
+        if user_id and user_id[0].isalpha():
+            file_id = user_id[1:]  # 先頭の文字（アルファベット）を除去
+
+        # 成績情報を取得（ライブラリ内で保存も行う）
+        filename = f"{file_id}_grades.json"
+        print(f"{Color.YELLOW}ポータルサイトから成績情報を取得中...{Color.RESET}")
+        get_grades_json(user_id, password, filename)
+
+        # ファイルが生成されたかチェック
+        if os.path.exists(filename):
+            print(f"{Color.GREEN}成績情報を {filename} に保存しました{Color.RESET}")
+            return filename
+        else:
+            print(f"{Color.YELLOW}注意: 成績データファイル {filename} が見つかりません。{Color.RESET}")
+            # 現在のディレクトリ内の_grades.jsonファイルを探す
+            for file in os.listdir('.'):
+                if file.endswith('_grades.json'):
+                    print(f"{Color.GREEN}代わりに {file} を使用します{Color.RESET}")
+                    return file
+            print(f"{Color.RED}成績データファイルが見つかりませんでした{Color.RESET}")
+            return None
+    except Exception as e:
+        print(f"{Color.RED}成績情報の取得に失敗しました: {str(e)}{Color.RESET}")
+        # エラー発生後にファイルが生成されていないか確認
+        if os.path.exists(filename):
+            print(
+                f"{Color.GREEN}しかし、成績データファイル {filename} が見つかりました。処理を続行します{Color.RESET}")
+            return filename
+        # 現在のディレクトリ内の_grades.jsonファイルを探す
+        for file in os.listdir('.'):
+            if file.endswith('_grades.json') and (file.startswith(f"{file_id}") or file.startswith(f"{user_id}")):
+                print(
+                    f"{Color.GREEN}成績データファイル {file} が見つかりました。処理を続行します{Color.RESET}")
+                return file
+        return None
+
+
 if __name__ == "__main__":
     import sys
+
+    # コマンドライン引数の解析
+    parser = argparse.ArgumentParser(description='CITraQ - 単位計算・進捗チェックツール')
+    parser.add_argument('grade_file', nargs='?',
+                        help='成績ファイル (例: 2231000_grades.json)')
+    parser.add_argument('--get-grades', action='store_true',
+                        help='ポータルサイトから成績情報を取得')
+    args = parser.parse_args()
 
     # Display splash screen
     show_splash_screen()
 
-    if len(sys.argv) < 2:
-        print(f"{Color.YELLOW}使用方法: python credit_calculator.py <成績ファイル>{Color.RESET}")
+    grades_file = None
+
+    # ポータルサイトから成績情報を取得する場合
+    if args.get_grades:
+        user_id = input("学籍番号を入力してください: ")
+        password = getpass.getpass("パスワードを入力してください: ")
+
+        grades_file = fetch_grades_from_portal(user_id, password)
+        if not grades_file:
+            print(f"{Color.YELLOW}ポータルからの成績取得に失敗しました。{Color.RESET}")
+            sys.exit(1)
+    # 成績ファイルが指定されている場合
+    elif args.grade_file:
+        grades_file = check_file_exists(args.grade_file)
+    # 引数が不足している場合
+    else:
+        parser.print_help()
+        print(f"\n{Color.YELLOW}使用例:{Color.RESET}")
+        print(
+            f"{Color.YELLOW}  python CITraQ.py 2231000_grades.json   # 既存の成績ファイルを使用{Color.RESET}")
+        print(
+            f"{Color.YELLOW}  python CITraQ.py --get-grades         # ポータルから成績を取得{Color.RESET}")
         sys.exit(1)
 
-    # Get enrollment year and department code from grades file
-    grades_file = sys.argv[1]
+    # 成績ファイル名から入学年度と学科コードを取得
     year_dept_code = extract_year_and_dept_code(grades_file)
 
     if not year_dept_code:
