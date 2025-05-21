@@ -1,0 +1,91 @@
+{
+    "department": {
+        "requirements": {
+            "total_credits": 124,
+            "liberal_arts": {
+                "total": 24,
+                "communication": 8,
+                "human_social_natural": {
+                    "group1": 4,
+                    "group2": 4
+                }
+            },
+            "specialized": {
+                "total": 100,
+                "basic": 20,
+                "core": 40,
+                "advanced": 40
+            }
+        },
+        "subjects": {
+            "liberal_arts": {
+                "department_specified": {
+                    "human_social_natural_1": {
+                        "subjects": [
+                            "倫理学",
+                            "歴史と人間",
+                            "心理学",
+                            "憲法と社会",
+                            "科学技術史",
+                            "環境科学概論"
+                        ]
+                    },
+                    "human_social_natural_2": {
+                        "subjects": [
+                            "政治と社会",
+                            "経済学",
+                            "地球科学",
+                            "物理の世界と先端技術"
+                        ]
+                    }
+                },
+                "other_liberal_arts": {
+                    "subjects": [
+                        "哲学",
+                        "文学と芸術",
+                        "身体と健康の科学",
+                        "現代社会論",
+                        "生命科学"
+                    ]
+                }
+            },
+            "specialized": {
+                "basic": {
+                    "required_subjects": [
+                        "情報リテラシー",
+                        "プログラミング入門",
+                        "情報数学",
+                        "情報理論",
+                        "アルゴリズムとデータ構造"
+                    ]
+                },
+                "core": {
+                    "required_subjects": [
+                        "コンピュータアーキテクチャ",
+                        "オペレーティングシステム",
+                        "データベース",
+                        "ネットワーク",
+                        "ソフトウェア工学"
+                    ]
+                },
+                "advanced": {
+                    "required_subjects": [
+                        "人工知能",
+                        "機械学習",
+                        "画像処理",
+                        "自然言語処理",
+                        "セキュリティ"
+                    ]
+                }
+            },
+            "graduation_research": {
+                "required_subjects": [
+                    "ゼミナール2",
+                    "卒業研究",
+                    "卒業演習1",
+                    "卒業演習2"
+                ]
+            }
+        }
+    }
+}

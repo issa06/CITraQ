@@ -1,0 +1,7 @@
+web/
+*.mod
+*.go
+*.pdf
+get_grade.py
+.DS_Store
+2231999_grades.json

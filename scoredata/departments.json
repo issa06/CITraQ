@@ -1,0 +1,156 @@
+{
+    "faculties": {
+        "engineering": {
+            "name": "工学部",
+            "name_en": "Faculty of Engineering",
+            "departments": {
+                "A1": {
+                    "name": "機械工学科",
+                    "name_en": "Department of Mechanical Engineering",
+                    "code": "A1"
+                },
+                "A2": {
+                    "name": "機械電子創成工学科",
+                    "name_en": "Department of Space, Semiconductor and Mechatronics Engineering",
+                    "code": "A2"
+                },
+                "A3": {
+                    "name": "先端材料工学科",
+                    "name_en": "Department of Advanced Materials Science and Engineering",
+                    "code": "A3"
+                },
+                "A4": {
+                    "name": "電気電子工学科",
+                    "name_en": "Department of Electrical and Electronic Engineering",
+                    "code": "A4"
+                },
+                "A5": {
+                    "name": "情報通信システム工学科",
+                    "name_en": "Department of Information and Communication Systems Engineering",
+                    "code": "A5"
+                },
+                "A6": {
+                    "name": "応用化学科",
+                    "name_en": "Department of Applied Chemistry",
+                    "code": "A6"
+                }
+            }
+        },
+        "creative_engineering": {
+            "name": "創造工学部",
+            "name_en": "Faculty of Creative Engineering",
+            "departments": {
+                "B1": {
+                    "name": "建築学科",
+                    "name_en": "Department of Architecture",
+                    "code": "B1"
+                },
+                "B2": {
+                    "name": "都市環境工学科",
+                    "name_en": "Department of Civil and Environmental Engineering",
+                    "code": "B2"
+                },
+                "B3": {
+                    "name": "デザイン科学科",
+                    "name_en": "Department of Design",
+                    "code": "B3"
+                }
+            }
+        },
+        "advanced_engineering": {
+            "name": "先進工学部",
+            "name_en": "Faculty of Advanced Engineering",
+            "departments": {
+                "C1": {
+                    "name": "未来ロボティクス学科",
+                    "name_en": "Department of Advanced Robotics",
+                    "code": "C1"
+                },
+                "C2": {
+                    "name": "生命科学科",
+                    "name_en": "Department of Life Science",
+                    "code": "C2"
+                },
+                "C3": {
+                    "name": "知能メディア工学科",
+                    "name_en": "Department of Advanced Media",
+                    "code": "C3"
+                }
+            }
+        },
+        "information_science": {
+            "name": "情報科学部",
+            "name_en": "Faculty of Information and Computer Science",
+            "departments": {
+                "31": {
+                    "name": "情報工学科",
+                    "name_en": "Department of Computer Science",
+                    "code": "31"
+                },
+                "32": {
+                    "name": "情報ネットワーク学科",
+                    "name_en": "Department of Computer Science",
+                    "code": "32"
+                }
+            }
+        },
+        "social_systems_science": {
+            "name": "社会システム科学部",
+            "name_en": "Faculty of Social Systems Science",
+            "departments": {
+                "41": {
+                    "name": "経営情報科学科",
+                    "name_en": "Department of Business System Design and Management",
+                    "code": "41"
+                },
+                "42": {
+                    "name": "プロジェクトマネジメント学科",
+                    "name_en": "Department of Business System Design and Management",
+                    "code": "42"
+                },
+                "43": {
+                    "name": "金融・経営リスク科学科",
+                    "name_en": "Department of Business System Design and Management",
+                    "code": "43"
+                }
+            }
+        },
+        "innovative_information_science": {
+            "name": "情報変革科学部",
+            "name_en": "Faculty of Innovative Information Science",
+            "departments": {
+                "G1": {
+                    "name": "情報工学科",
+                    "name_en": "Department of Computer Science",
+                    "code": "G1"
+                },
+                "G2": {
+                    "name": "認知情報科学科",
+                    "name_en": "Department of Cognitive and Information Sciences",
+                    "code": "G2"
+                },
+                "G3": {
+                    "name": "高度応用情報科学科",
+                    "name_en": "Department of Applied Informatics",
+                    "code": "G3"
+                }
+            }
+        },
+        "innovative_management_science": {
+            "name": "未来変革科学部",
+            "name_en": "Faculty of Innovative Management Science",
+            "departments": {
+                "K1": {
+                    "name": "デジタル変革科学科",
+                    "name_en": "Department of Digital Transformation",
+                    "code": "K1"
+                },
+                "K2": {
+                    "name": "経営デザイン科学科",
+                    "name_en": "Department of Business System Design and Management",
+                    "code": "K2"
+                }
+            }
+        }
+    }
+}
