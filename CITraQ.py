@@ -514,7 +514,7 @@ def check_graduation_requirements(
 
 def get_department_from_code(code: str) -> str:
     """Get department name from department code"""
-    with open("scoredata/departments.json", "r", encoding="utf-8") as f:
+    with open("catalog/departments.json", "r", encoding="utf-8") as f:
         data = json.load(f)
 
     for faculty in data["faculties"].values():
@@ -737,14 +737,14 @@ if __name__ == "__main__":
     print(f"{Color.CYAN}==== {APP_NAME} - {enrollment_year}入学 {dept_name} ===={Color.RESET}\n")
 
     # Construct file paths using enrollment year and department code
-    requirements_file = f"scoredata/{year_dept_code}_requirements.json"
+    requirements_file = f"catalog/{year_dept_code}_requirements.json"
     if not os.path.exists(requirements_file):
         print(f"{Color.RED}エラー: 要件ファイル {requirements_file} が見つかりません。{Color.RESET}")
         sys.exit(1)
     requirements = load_requirements(requirements_file, dept_name)
 
     # Load subject list
-    subjects_file = f"scoredata/{year_dept_code}_subjects.json"
+    subjects_file = f"catalog/{year_dept_code}_subjects.json"
     if not os.path.exists(subjects_file):
         print(f"{Color.RED}エラー: 科目ファイル {subjects_file} が見つかりません。{Color.RESET}")
         sys.exit(1)
