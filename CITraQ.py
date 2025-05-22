@@ -18,12 +18,19 @@ except ImportError:
 
 # Application information
 APP_NAME = "CITraQ"
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
-# Grades considered as "Pass"
+# 合格とみなす成績
 PASS_GRADES = ["S", "A", "B", "C", "認定", "合"]
 
-# ANSI escape codes for colors
+# カテゴリ一覧
+CATEGORIES = [
+    "教養科目", "専門科目", "専門科目_基礎",
+    "専門科目_基幹", "専門科目_展開"
+]
+
+
+# 色の定義
 
 
 class Color:
@@ -36,81 +43,150 @@ class Color:
     RESET = "\033[0m"   # Reset
 
 
-def normalize_subject_name(name: str) -> str:
-    """Normalize subject names (full-width to half-width, remove spaces, standardize numbers)"""
-    if not name:
-        return ""
-    # Full-width to half-width, remove spaces, standardize digits
-    name = unicodedata.normalize('NFKC', name)
-    name = name.replace(' ', '').replace('　', '')
-    # Convert full-width digits to half-width
-    name = ''.join([str(unicodedata.digit(c)) if unicodedata.name(
-        c).startswith('FULLWIDTH DIGIT') else c for c in name])
-    return name
+def load_json_file(file_path: str) -> Any:
+    """JSONファイルを読み込む関数
 
+        Args:
+            file_path (str): JSONファイルのパス
 
-def load_requirements(file_path: str, department: str) -> Dict[str, Any]:
-    """Load graduation requirements from requirements.json"""
+        Returns:
+            Any: JSONファイルの内容
+    """
     with open(file_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        return json.load(f)
+
+
+def normalize_subject_name(class_name: str) -> str:
+    """科目名を正規化する関数
+        全角文字を半角文字に変換し、スペースを削除し、数字を半角数字に変換する
+
+        Args:
+            class_name (str): 正規化する科目名
+
+        Returns:
+            normalized_class_name (str): 正規化された科目名
+    """
+    if not class_name:
+        return ""
+    # 全角文字を半角文字に変換し、スペースを削除し、数字を半角数字に変換する
+    class_name = unicodedata.normalize('NFKC', class_name)
+    class_name = class_name.replace(' ', '').replace('　', '')
+    # 全角数字を半角数字に変換する
+    normalized_class_name = ''.join([str(unicodedata.digit(c)) if unicodedata.name(
+        c).startswith('FULLWIDTH DIGIT') else c for c in class_name])
+    return normalized_class_name
+
+
+def load_requirements(file_path: str) -> Dict[str, Any]:
+    """卒業要件を読み込む関数
+
+        Args:
+            file_path (str): 卒業要件ファイルのパス(path/to/****_requirements.json)
+
+        Returns:
+            Dict[str, Any]: 卒業要件の辞書
+
+        Raises:
+            KeyError: 必要なキーがJSONファイルに存在しない場合
+            FileNotFoundError: ファイルが存在しない場合
+    """
+
+    data = load_json_file(file_path)
 
     if "department" not in data:
-        raise KeyError("'department' key not found in requirements file.")
+        raise KeyError(f"'department' キーが {file_path} に見つかりません。")
 
     if "requirements" not in data["department"]:
-        raise KeyError("'requirements' key not found in department data.")
+        raise KeyError("'requirements' キーが department 内に見つかりません。")
 
     return data["department"]["requirements"]
 
 
 def flatten_subjects(subjects: Any, category: str = None) -> List[Dict[str, Any]]:
-    """Flatten all subjects in subjects.json by category"""
-    result = []
+    """科目ファイルをフラット化する関数
+
+        Args:
+            subjects (Any): 科目ファイルの内容
+            category (str): カテゴリ名
+
+        Returns:
+            flattened_subjects (List[Dict[str, Any]]): フラット化された科目ファイルの内容
+    """
+    flattened_subjects = []
     if isinstance(subjects, dict):
         for key, value in subjects.items():
             # Inherit the category name
             cat = category if category else key
-            result.extend(flatten_subjects(value, cat))
+            flattened_subjects.extend(flatten_subjects(value, cat))
     elif isinstance(subjects, list):
         for subject in subjects:
             if isinstance(subject, dict):
                 subject_copy = subject.copy()
                 if category:
                     subject_copy["category"] = category
-                result.append(subject_copy)
-    return result
+                flattened_subjects.append(subject_copy)
+    return flattened_subjects
 
 
-def load_subjects(file_path: str) -> Dict[str, List[Dict[str, Any]]]:
-    """Load subject list from subjects.json (flatten all categories, convert category names)"""
-    with open(file_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    all_subjects = flatten_subjects(data)
-    categories = {}
-    for subject in all_subjects:
-        cat = subject.get("category", "Other")
-        # Convert category names to match requirements
-        if cat == "基礎科目":
-            cat_key = "専門科目_基礎"
-        elif cat == "基幹科目":
-            cat_key = "専門科目_基幹"
-        elif cat == "展開科目":
-            cat_key = "専門科目_展開"
-        elif cat.startswith("専門科目"):
-            cat_key = "専門科目"
-        elif cat.startswith("教養科目") or cat == "教養科目":
-            cat_key = "教養科目"
-        else:
-            cat_key = cat
-        if cat_key not in categories:
-            categories[cat_key] = []
-        categories[cat_key].append(subject)
+def map_category_name(category: str) -> str:
+    """カテゴリ名を標準形式に変換する関数
+
+        Args:
+            category (str): カテゴリ名
+
+        Returns:
+            (str): 標準形式のカテゴリ名
+    """
+    if category == "基礎科目":
+        return "専門科目_基礎"
+    elif category == "基幹科目":
+        return "専門科目_基幹"
+    elif category == "展開科目":
+        return "専門科目_展開"
+    elif category.startswith("専門科目"):
+        return "専門科目"
+    elif category.startswith("教養科目") or category == "教養科目":
+        return "教養科目"
+    return category  # fallback
+
+
+def initialize_categories(patterns: Dict = None) -> Dict[str, float]:
+    """カテゴリ辞書を初期化する関数
+
+        Args:
+            patterns (Dict): 科目パターン
+
+        Returns:
+            category (Dict[str, float]): カテゴリ辞書
+    """
+    categories = {key: 0.0 for key in CATEGORIES}
+
     return categories
 
 
-def create_patterns(subjects: Dict[str, List[Dict[str, Any]]]) -> Dict[str, List[Dict[str, Any]]]:
-    """Return subject lists by category as is"""
-    return subjects
+def load_subjects(file_path: str) -> Dict[str, List[Dict[str, Any]]]:
+    """科目リストを読み込む関数
+
+        Args:
+            file_path (str): 科目ファイルのパス
+
+        Returns:
+            categories (Dict[str, List[Dict[str, Any]]]): カテゴリごとの科目リスト
+    """
+    data = load_json_file(file_path)
+    all_subjects = flatten_subjects(data)
+
+    categories = {}
+    for subject in all_subjects:
+        cat = subject.get("category", "Other")
+        # カテゴリ名を標準形式に変換
+        cat_key = map_category_name(cat)
+
+        if cat_key not in categories:
+            categories[cat_key] = []
+        categories[cat_key].append(subject)
+
+    return categories
 
 
 def match_subject_to_category(
@@ -121,7 +197,7 @@ def match_subject_to_category(
     for category, subject_list in patterns.items():
         for subject_info in subject_list:
             pattern_name = normalize_subject_name(subject_info["科目名"])
-            # Exact match or partial match (prefix match)
+
             if (subj_name == pattern_name or
                 pattern_name in subj_name or
                     subj_name in pattern_name):
@@ -133,65 +209,71 @@ def load_grades(
     file_path: str,
     patterns: Dict[str, List[Dict[str, Any]]]
 ) -> Tuple[float, Dict[str, float]]:
-    """Load grades.json and calculate credits for passed subjects"""
-    with open(file_path, "r", encoding="utf-8") as f:
-        grades = json.load(f)
+    """成績ファイルを読み込む関数
 
-    # Initialize all required categories
-    required_categories = [
-        "教養科目", "専門科目", "専門科目_基礎",
-        "専門科目_基幹", "専門科目_展開"
-    ]
-    credits_by_category = {key: 0.0 for key in required_categories}
-    for key in patterns.keys():
-        if key not in credits_by_category:
-            credits_by_category[key] = 0.0
+        Args:
+            file_path (str): 成績ファイルのパス
+            patterns (Dict[str, List[Dict[str, Any]]]): 科目パターン
+
+        Returns:
+            total_credits (float): 総単位数
+            credits_by_category (Dict[str, float]): カテゴリ別単位数
+    """
+    grades = load_json_file(file_path)
+    credits_by_category = initialize_categories(patterns)
     total_credits = 0.0
 
     for subject in grades:
-        # Skip if subject name is empty
+        # 科目名が空の場合はスキップ
         if not subject.get("subject") or subject["subject"].strip() == "":
             continue
 
-        subj_name = normalize_subject_name(subject["subject"])
+        # 単位数を取得（デフォルト単位数は2.0）
         credit = 2.0
         if subject.get("credits") and subject["credits"].strip() != "":
             credit = float(subject["credits"])
 
-        if subject["evaluation"] in PASS_GRADES:
-            matched = False
-            # First, determine from course_category and classification
-            if subject["course_category"] == "専門科目":
-                if subject["classification"] == "基礎科目":
-                    credits_by_category["専門科目_基礎"] += credit
-                    matched = True
-                elif subject["classification"] == "基幹科目":
-                    credits_by_category["専門科目_基幹"] += credit
-                    matched = True
-                elif subject["classification"] == "展開科目":
-                    credits_by_category["専門科目_展開"] += credit
-                    matched = True
+        # 合格科目のみ処理
+        if subject["evaluation"] not in PASS_GRADES:
+            continue
 
-            # Pattern matching
-            if not matched:
-                matched, category = match_subject_to_category(
-                    subj_name, patterns)
-                if matched:
-                    credits_by_category[category] += credit
+        # 科目の分類処理
+        matched = False
+        category = ""
 
-            total_credits += credit
-            if not matched:
-                print(
-                    f"\n[警告] '{subject['subject']}' は、どのカテゴリにも一致しませんでした。"
-                    f"({credit} 単位, grade: {subject['evaluation']})\n"
-                )
+        # メタデータから分類
+        if subject["course_category"] == "専門科目":
+            classification = subject["classification"]
+            category = map_category_name(f"専門科目_{classification}")
+            if category in CATEGORIES:
+                matched = True
 
-    # Add up 基礎・基幹・展開 credits to専門科目
+        # パターンマッチング（メタデータで分類できなかった場合）
+        if not matched:
+            subj_name = normalize_subject_name(subject["subject"])
+            matched, category = match_subject_to_category(subj_name, patterns)
+
+        # 単位の加算
+        if matched and category in credits_by_category:
+            credits_by_category[category] += credit
+
+        # 総単位数に加算
+        total_credits += credit
+
+        # マッチしない場合は警告表示
+        if not matched:
+            print(
+                f"\n[警告] '{subject['subject']}' は、どのカテゴリにも一致しませんでした。"
+                f"({credit} 単位, grade: {subject['evaluation']})\n"
+            )
+
+    # 専門科目合計の計算
     credits_by_category["専門科目"] = (
         credits_by_category["専門科目_基礎"] +
         credits_by_category["専門科目_基幹"] +
         credits_by_category["専門科目_展開"]
     )
+
     return total_credits, credits_by_category
 
 
@@ -200,7 +282,16 @@ def check_requirements(
     credits_by_category: Dict[str, float],
     requirements: Dict[str, Any]
 ) -> None:
-    """Check graduation/progression requirements and display remaining credits"""
+    """進級・卒業要件チェック
+
+        Args:
+            total_credits (float): 総単位数
+            credits_by_category (Dict[str, float]): カテゴリ別単位数
+            requirements (Dict[str, Any]): 要件
+
+        Returns:
+            None
+    """
     print(f"\n{Color.CYAN}【進級・卒業要件チェック】\n{Color.RESET}")
 
     # Total credits
@@ -260,9 +351,16 @@ def check_specified_subjects(
     grades: List[Dict[str, Any]],
     requirements: Dict[str, Any]
 ) -> None:
-    """Check the status of specified required subjects"""
-    print(f"\n\n{Color.CYAN}【指定科目チェック】\n{Color.RESET}")
+    """指定科目チェック
 
+        Args:
+            subjects (Dict[str, List[Dict[str, Any]]]): 科目リスト
+            grades (List[Dict[str, Any]]): 成績リスト
+            requirements (Dict[str, Any]): 要件
+
+        Returns:
+            None
+    """
     # Create a list of completed subjects
     taken_subjects = {
         subject["subject"]
@@ -316,10 +414,16 @@ def check_department_specified_subjects(
     grades: List[Dict[str, Any]],
     subjects: Dict[str, List[Dict[str, Any]]]
 ) -> None:
-    """Check the status of department-specified subject groups"""
-    print(f"\n\n{Color.CYAN}【学部指定科目群チェック】\n{Color.RESET}")
+    """学部指定科目群チェック
 
-    # Create a dictionary of completed subjects and their credits
+        Args:
+            grades (List[Dict[str, Any]]): 成績リスト
+            subjects (Dict[str, List[Dict[str, Any]]]): 科目リスト
+
+        Returns:
+            None
+    """
+    # 修了科目とその単位数を辞書に格納
     taken_subjects = {}
     for subject in grades:
         if subject["evaluation"] in PASS_GRADES:
@@ -328,13 +432,13 @@ def check_department_specified_subjects(
                 credit = float(subject["credits"])
             taken_subjects[subject["subject"]] = credit
 
-    # Extract subjects with "department specified group" attribute from all subjects
+    # 学部指定科目群属性を持つ科目を抽出
     group1_subjects = [s["科目名"]
                        for s in sum(subjects.values(), []) if s.get("学部指定科目群") == 1]
     group2_subjects = [s["科目名"]
                        for s in sum(subjects.values(), []) if s.get("学部指定科目群") == 2]
 
-    # Calculate credits earned for each group
+    # 各群の取得単位数を計算
     group1_credits = sum(taken_subjects.get(name, 0)
                          for name in group1_subjects)
     group2_credits = sum(taken_subjects.get(name, 0)
@@ -343,7 +447,7 @@ def check_department_specified_subjects(
     print(f"{Color.GREEN}学部指定科目群1:{Color.RESET} {Color.BLUE}{group1_credits}{Color.RESET}単位")
     print(f"{Color.GREEN}学部指定科目群2:{Color.RESET} {Color.BLUE}{group2_credits}{Color.RESET}単位")
 
-    # Display missing subjects
+    # 未取得科目を表示
     missing1 = [name for name in group1_subjects if name not in taken_subjects]
     missing2 = [name for name in group2_subjects if name not in taken_subjects]
 
@@ -362,9 +466,15 @@ def check_progression_requirements(
     total_credits: float,
     grades: List[Dict[str, Any]]
 ) -> None:
-    """Check progression requirements"""
-    print(f"\n\n{Color.CYAN}【進級要件チェック】{Color.RESET}")
+    """進級要件チェック
 
+        Args:
+            total_credits (float): 総単位数
+            grades (List[Dict[str, Any]]): 成績リスト
+
+        Returns:
+            None
+    """
     progression_requirements = {
         2: {"years": 1, "credits": 32},
         3: {"years": 2, "credits": 64},
@@ -392,10 +502,20 @@ def check_graduation_requirements(
     grades: List[Dict[str, Any]],
     requirements: Dict[str, Any]
 ) -> None:
-    """Check graduation requirements"""
+    """卒業要件チェック
+
+        Args:
+            total_credits (float): 総単位数
+            credits_by_category (Dict[str, float]): カテゴリ別単位数
+            grades (List[Dict[str, Any]]): 成績リスト
+            requirements (Dict[str, Any]): 要件
+
+        Returns:
+            None
+    """
     print(f"\n\n{Color.CYAN}【卒業要件チェック】{Color.RESET}")
 
-    # Check total credits
+    # 総単位数チェック
     is_total_achieved = total_credits >= requirements['total_credits']
     status = status_text(is_total_achieved)
     message = '満たしています' if is_total_achieved else '満たしていません'
@@ -410,11 +530,11 @@ def check_graduation_requirements(
         remainder = req_total - total_credits
         print(f"    残り必要単位数: {Color.YELLOW}{remainder}{Color.RESET}単位")
 
-    # Check liberal arts credits
+    # 教養科目チェック
     print(f"\n{Color.GREEN}教養科目:{Color.RESET}")
     print(f"  取得単位数: {Color.BLUE}{credits_by_category['教養科目']}{Color.RESET}単位")
 
-    # Check communication skills
+    # コミュニケーションスキルチェック
     comm_credits = sum(
         float(grade['credits']) for grade in grades
         if (grade['course_category'] == '教養科目' and
@@ -425,7 +545,7 @@ def check_graduation_requirements(
     print(f"  {Color.GREEN}コミュニケーションスキル:{Color.RESET} "
           f"{Color.BLUE}{comm_credits}{Color.RESET}単位")
 
-    # Check international understanding
+    # 国際理解チェック
     intl_credits = sum(
         float(grade['credits']) for grade in grades
         if (grade['course_category'] == '教養科目' and
@@ -436,7 +556,7 @@ def check_graduation_requirements(
     print(
         f"  {Color.GREEN}国際理解:{Color.RESET} {Color.BLUE}{intl_credits}{Color.RESET}単位")
 
-    # Check department specified subject groups
+    # 学部指定科目群チェック
     group1_credits = sum(
         float(grade['credits']) for grade in grades
         if (grade['course_category'] == '教養科目' and
@@ -456,7 +576,7 @@ def check_graduation_requirements(
     print(
         f"  {Color.GREEN}学部指定科目群2:{Color.RESET} {Color.BLUE}{group2_credits}{Color.RESET}単位")
 
-    # Check general classification
+    # 総合分類チェック
     total_credits = sum(
         float(grade['credits']) for grade in grades
         if (grade['course_category'] == '教養科目' and
@@ -467,11 +587,11 @@ def check_graduation_requirements(
     print(
         f"  {Color.GREEN}総合分類:{Color.RESET} {Color.BLUE}{total_credits}{Color.RESET}単位")
 
-    # Check specialized subjects
+    # 専門科目チェック
     print(f"\n{Color.BLUE}専門科目:{Color.RESET}")
     print(f"  取得単位数: {Color.BLUE}{credits_by_category['専門科目']}{Color.RESET}単位")
 
-    # Check graduation research related subjects
+    # 卒業研究関連科目チェック
     has_seminar2 = any(
         grade['subject'] == 'ゼミナール2' and
         grade['evaluation'] in PASS_GRADES for grade in grades
@@ -499,7 +619,7 @@ def check_graduation_requirements(
         print("    「ゼミナール2」と「卒業研究」、または")
         print("    「卒業演習1」と「卒業演習2」の取得が必要です")
 
-    # Show enrolled graduation research related subjects
+    # 履修中の卒業研究関連科目表示
     if not has_seminar2 or not has_thesis or not has_exercise1 or not has_exercise2:
         print("\n  【履修中の卒業研究関連科目】")
         if not has_seminar2:
@@ -513,9 +633,15 @@ def check_graduation_requirements(
 
 
 def get_department_from_code(code: str) -> str:
-    """Get department name from department code"""
-    with open("catalog/departments.json", "r", encoding="utf-8") as f:
-        data = json.load(f)
+    """コードから学部名を取得
+
+        Args:
+            code (str): 学部コード
+
+        Returns:
+            str: 学部名
+    """
+    data = load_json_file("catalog/departments.json")
 
     for faculty in data["faculties"].values():
         for dept in faculty["departments"].values():
@@ -630,8 +756,55 @@ def check_file_exists(file_path: str, is_grades_file: bool = True) -> str:
     sys.exit(1)
 
 
+def generate_grades_filename(user_id: str) -> str:
+    """学籍番号からファイル名を生成する関数"""
+    file_id = user_id
+    if user_id and user_id[0].isalpha():
+        file_id = user_id[1:]  # 先頭の文字（アルファベット）を除去
+    return f"{file_id}_grades.json"
+
+
+def find_existing_grades_file(file_id: str, user_id: str) -> str:
+    """既存の成績ファイルを探す関数"""
+    for file in os.listdir('.'):
+        is_grades_file = file.endswith('_grades.json')
+        is_user_file = file.startswith(
+            f"{file_id}") or file.startswith(f"{user_id}")
+
+        if is_grades_file and is_user_file:
+            print(
+                f"{Color.GREEN}成績データファイル {file} が見つかりました。処理を続行します{Color.RESET}")
+            return file
+    return None
+
+
+def check_grade_file_exists(filename: str) -> str:
+    """成績ファイルの存在確認"""
+    if os.path.exists(filename):
+        print(f"{Color.GREEN}成績情報を {filename} に保存しました{Color.RESET}")
+        return filename
+
+    print(f"{Color.YELLOW}注意: 成績データファイル {filename} が見つかりません。{Color.RESET}")
+    # 現在のディレクトリ内の_grades.jsonファイルを探す
+    for file in os.listdir('.'):
+        if file.endswith('_grades.json'):
+            print(f"{Color.GREEN}代わりに {file} を使用します{Color.RESET}")
+            return file
+
+    print(f"{Color.RED}成績データファイルが見つかりませんでした{Color.RESET}")
+    return None
+
+
 def fetch_grades_from_portal(user_id: str, password: str) -> str:
-    """ポータルサイトから成績情報を取得しJSONファイルに保存"""
+    """ポータルサイトから成績情報を取得しJSONファイルに保存
+
+        Args:
+            user_id (str): ユーザーID
+            password (str): パスワード
+
+        Returns:
+            filename (str): 成績ファイル名
+    """
     if not GRADE_FETCH_AVAILABLE:
         print(
             f"{Color.RED}エラー: 成績取得機能が利用できません。cit-portal-wrapper をインストールしてください。{Color.RESET}")
@@ -639,43 +812,31 @@ def fetch_grades_from_portal(user_id: str, password: str) -> str:
         return None
 
     try:
-        # ユーザーIDからファイル名用の数字部分を抽出（先頭のアルファベットを除去）
-        file_id = user_id
-        if user_id and user_id[0].isalpha():
-            file_id = user_id[1:]  # 先頭の文字（アルファベット）を除去
+        # ファイル名を生成
+        file_id = user_id[1:] if user_id and user_id[0].isalpha() else user_id
+        filename = generate_grades_filename(user_id)
 
-        # 成績情報を取得（ライブラリ内で保存も行う）
-        filename = f"{file_id}_grades.json"
+        # 成績情報を取得
         print(f"{Color.YELLOW}ポータルサイトから成績情報を取得中...{Color.RESET}")
         get_grades_json(user_id, password, filename)
 
-        # ファイルが生成されたかチェック
-        if os.path.exists(filename):
-            print(f"{Color.GREEN}成績情報を {filename} に保存しました{Color.RESET}")
-            return filename
-        else:
-            print(f"{Color.YELLOW}注意: 成績データファイル {filename} が見つかりません。{Color.RESET}")
-            # 現在のディレクトリ内の_grades.jsonファイルを探す
-            for file in os.listdir('.'):
-                if file.endswith('_grades.json'):
-                    print(f"{Color.GREEN}代わりに {file} を使用します{Color.RESET}")
-                    return file
-            print(f"{Color.RED}成績データファイルが見つかりませんでした{Color.RESET}")
-            return None
+        # ファイルの存在確認
+        return check_grade_file_exists(filename)
+
     except Exception as e:
         print(f"{Color.RED}成績情報の取得に失敗しました: {str(e)}{Color.RESET}")
+
         # エラー発生後にファイルが生成されていないか確認
+        file_id = user_id[1:] if user_id and user_id[0].isalpha() else user_id
+        filename = f"{file_id}_grades.json"
+
         if os.path.exists(filename):
             print(
                 f"{Color.GREEN}しかし、成績データファイル {filename} が見つかりました。処理を続行します{Color.RESET}")
             return filename
-        # 現在のディレクトリ内の_grades.jsonファイルを探す
-        for file in os.listdir('.'):
-            if file.endswith('_grades.json') and (file.startswith(f"{file_id}") or file.startswith(f"{user_id}")):
-                print(
-                    f"{Color.GREEN}成績データファイル {file} が見つかりました。処理を続行します{Color.RESET}")
-                return file
-        return None
+
+        # 既存のファイルを探す
+        return find_existing_grades_file(file_id, user_id)
 
 
 if __name__ == "__main__":
@@ -689,7 +850,7 @@ if __name__ == "__main__":
                         help='ポータルサイトから成績情報を取得')
     args = parser.parse_args()
 
-    # Display splash screen
+    # スプラッシュ画面表示
     show_splash_screen()
 
     grades_file = None
@@ -723,11 +884,11 @@ if __name__ == "__main__":
         print(f"{Color.RED}エラー: ファイル名から入学年度と学科コードを抽出できませんでした。{Color.RESET}")
         sys.exit(1)
 
-    # Department code is the last 2 digits
+    # 学科コードは最後の2桁
     dept_code = year_dept_code[2:]
     dept_name = get_department_from_code(dept_code)
 
-    # Get enrollment year (e.g., 2022年度)
+    # 入学年度を取得
     enrollment_year = get_enrollment_year(year_dept_code)
 
     if not dept_name:
@@ -736,32 +897,30 @@ if __name__ == "__main__":
 
     print(f"{Color.CYAN}==== {APP_NAME} - {enrollment_year}入学 {dept_name} ===={Color.RESET}\n")
 
-    # Construct file paths using enrollment year and department code
+    # 要件ファイルを読み込む
     requirements_file = f"catalog/{year_dept_code}_requirements.json"
     if not os.path.exists(requirements_file):
         print(f"{Color.RED}エラー: 要件ファイル {requirements_file} が見つかりません。{Color.RESET}")
         sys.exit(1)
-    requirements = load_requirements(requirements_file, dept_name)
+    requirements = load_requirements(requirements_file)
 
-    # Load subject list
+    # 科目リストを読み込む
     subjects_file = f"catalog/{year_dept_code}_subjects.json"
     if not os.path.exists(subjects_file):
         print(f"{Color.RED}エラー: 科目ファイル {subjects_file} が見つかりません。{Color.RESET}")
         sys.exit(1)
     subjects = load_subjects(subjects_file)
-    patterns = create_patterns(subjects)
 
-    # Load grades
-    with open(grades_file, "r", encoding="utf-8") as f:
-        grades = json.load(f)
+    # 成績データを読み込む
+    grades = load_json_file(grades_file)
 
     print(f"{Color.YELLOW}成績データを解析中...{Color.RESET}")
-    time.sleep(0.5)  # Wait a bit
+    time.sleep(0.5)
 
-    # Calculate total credits
-    total_credits, credits_by_category = load_grades(grades_file, patterns)
+    # 総単位数を計算
+    total_credits, credits_by_category = load_grades(grades_file, subjects)
 
-    # Run various checks
+    # 様々なチェックを実行
     check_requirements(total_credits, credits_by_category, requirements)
     check_specified_subjects(subjects, grades, requirements)
     check_department_specified_subjects(grades, subjects)

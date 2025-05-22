@@ -1,0 +1,94 @@
+{
+    "department": {
+        "requirements": {
+            "total_credits": 124,
+            "liberal_arts": {
+                "total": 36,
+                "communication": 6,
+                "international_understanding": 2,
+                "human_social_natural": {
+                    "group1": 6,
+                    "group2": 4
+                },
+                "comprehensive": 2,
+                "special": 1
+            },
+            "specialized": {
+                "total": 88,
+                "basic": 20,
+                "core": 40,
+                "advanced": 28
+            }
+        },
+        "promotion": {
+            "second_year": {
+                "years": 1,
+                "credits": 32
+            },
+            "third_year": {
+                "years": 2,
+                "credits": 64
+            },
+            "fourth_year": {
+                "years": 3,
+                "credits": 96,
+                "specialized_requirements": true
+            }
+        },
+        "subjects": {
+            "liberal_arts": {
+                "department_specified": {
+                    "human_social_natural_1": {
+                        "subjects": [
+                            "グローバル時代の法",
+                            "歴史と人間",
+                            "心理学",
+                            "憲法と社会",
+                            "科学技術史",
+                            "環境科学概論"
+                        ]
+                    },
+                    "human_social_natural_2": {
+                        "subjects": [
+                            "政治と社会",
+                            "経済学",
+                            "生命科学",
+                            "地球科学"
+                        ]
+                    }
+                },
+                "international_understanding": {
+                    "subjects": [
+                        "グローバル時代の法",
+                        "国際社会論"
+                    ]
+                },
+                "comprehensive": {
+                    "subjects": [
+                        "課題探究セミナー",
+                        "総合学際科目"
+                    ]
+                }
+            },
+            "specialized": {
+                "basic": {
+                    "required_subjects": [
+                        "情報リテラシ演習",
+                        "Webプログラミング演習",
+                        "ネットワークプログラミング演習",
+                        "ネットワークプログラミング応用演習"
+                    ],
+                    "required_count": 3
+                },
+                "advanced": {
+                    "required_subjects": [
+                        "Webシステム基礎実験",
+                        "Webアプリケーション構築実験",
+                        "ネットワーク管理実習"
+                    ],
+                    "required_count": 1
+                }
+            }
+        }
+    }
+} 
