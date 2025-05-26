@@ -651,7 +651,14 @@ def get_department_from_code(code: str) -> str:
 
 
 def extract_year_and_dept_code(filename: str) -> str:
-    """Extract enrollment year and department code from filename (e.g., 2231017 -> 2231)"""
+    """学籍番号から入学年と学科コードを抽出
+
+        Args:
+            filename (str): 学籍番号
+
+        Returns:
+            str: 入学年と学科コード
+    """
     try:
         filename = os.path.basename(filename)
         if len(filename) >= 4:
@@ -694,21 +701,28 @@ def show_splash_screen():
 
 # Function to display status text
 def status_text(is_achieved: bool) -> str:
-    """Return colored status text based on achievement status"""
+    """達成状態に応じた色付きのテキストを返す
+
+        Args:
+            is_achieved (bool): 達成状態
+
+        Returns:
+            str: 色付きのテキスト
+    """
     if is_achieved:
         return f"{Color.GREEN}[達成]{Color.RESET}"
     else:
         return f"{Color.RED}[未達成]{Color.RESET}"
 
 
-def use_existing_file(user_id: str = None) -> str:
+def use_existing_file(student_id: str = None) -> str:
     """既存の成績ファイルを探して選択する"""
     # 既存のファイルを探す
     existing_files = [f for f in os.listdir('.') if f.endswith('_grades.json')]
 
     # ユーザーIDが指定されている場合は、そのユーザーのファイルを優先
-    if user_id:
-        user_files = [f for f in existing_files if f.startswith(f"{user_id}")]
+    if student_id:
+        user_files = [f for f in existing_files if f.startswith(f"{student_id}")]
         if user_files:
             existing_files = user_files
 
@@ -756,20 +770,20 @@ def check_file_exists(file_path: str, is_grades_file: bool = True) -> str:
     sys.exit(1)
 
 
-def generate_grades_filename(user_id: str) -> str:
+def generate_grades_filename(student_id: str) -> str:
     """学籍番号からファイル名を生成する関数"""
-    file_id = user_id
-    if user_id and user_id[0].isalpha():
-        file_id = user_id[1:]  # 先頭の文字（アルファベット）を除去
+    file_id = student_id
+    if student_id and student_id[0].isalpha():
+        file_id = student_id[1:]  # 先頭のアルファベットを除去
     return f"{file_id}_grades.json"
 
 
-def find_existing_grades_file(file_id: str, user_id: str) -> str:
+def find_existing_grades_file(file_id: str, student_id: str) -> str:
     """既存の成績ファイルを探す関数"""
     for file in os.listdir('.'):
         is_grades_file = file.endswith('_grades.json')
         is_user_file = file.startswith(
-            f"{file_id}") or file.startswith(f"{user_id}")
+            f"{file_id}") or file.startswith(f"{student_id}")
 
         if is_grades_file and is_user_file:
             print(
@@ -795,11 +809,11 @@ def check_grade_file_exists(filename: str) -> str:
     return None
 
 
-def fetch_grades_from_portal(user_id: str, password: str) -> str:
+def fetch_grades_from_portal(student_id: str, password: str) -> str:
     """ポータルサイトから成績情報を取得しJSONファイルに保存
 
         Args:
-            user_id (str): ユーザーID
+            student_id (str): ユーザーID
             password (str): パスワード
 
         Returns:
@@ -813,12 +827,12 @@ def fetch_grades_from_portal(user_id: str, password: str) -> str:
 
     try:
         # ファイル名を生成
-        file_id = user_id[1:] if user_id and user_id[0].isalpha() else user_id
-        filename = generate_grades_filename(user_id)
+        file_id = student_id[1:] if student_id and student_id[0].isalpha() else student_id
+        filename = generate_grades_filename(student_id)
 
         # 成績情報を取得
         print(f"{Color.YELLOW}ポータルサイトから成績情報を取得中...{Color.RESET}")
-        get_grades_json(user_id, password, filename)
+        get_grades_json(student_id, password, filename)
 
         # ファイルの存在確認
         return check_grade_file_exists(filename)
@@ -827,7 +841,7 @@ def fetch_grades_from_portal(user_id: str, password: str) -> str:
         print(f"{Color.RED}成績情報の取得に失敗しました: {str(e)}{Color.RESET}")
 
         # エラー発生後にファイルが生成されていないか確認
-        file_id = user_id[1:] if user_id and user_id[0].isalpha() else user_id
+        file_id = student_id[1:] if student_id and student_id[0].isalpha() else student_id
         filename = f"{file_id}_grades.json"
 
         if os.path.exists(filename):
@@ -836,7 +850,7 @@ def fetch_grades_from_portal(user_id: str, password: str) -> str:
             return filename
 
         # 既存のファイルを探す
-        return find_existing_grades_file(file_id, user_id)
+        return find_existing_grades_file(file_id, student_id)
 
 
 if __name__ == "__main__":
@@ -857,10 +871,10 @@ if __name__ == "__main__":
 
     # ポータルサイトから成績情報を取得する場合
     if args.get_grades:
-        user_id = input("学籍番号を入力してください: ")
+        student_id = input("学籍番号を入力してください: ")
         password = getpass.getpass("パスワードを入力してください: ")
 
-        grades_file = fetch_grades_from_portal(user_id, password)
+        grades_file = fetch_grades_from_portal(student_id, password)
         if not grades_file:
             print(f"{Color.YELLOW}ポータルからの成績取得に失敗しました。{Color.RESET}")
             sys.exit(1)
